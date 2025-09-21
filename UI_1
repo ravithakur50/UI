@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JIRA Task Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 3px;
+            background-color: #dee2e6;
+            transform: translateX(-50%);
+        }
+        .milestone {
+            display: flex;
+            align-items: center;
+            position: relative;
+            width: 45%;
+            padding: 15px;
+            margin: 20px 0;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .milestone.left {
+            left: 0;
+            justify-content: flex-end;
+        }
+        .milestone.right {
+            left: 55%;
+            justify-content: flex-start;
+        }
+        .milestone::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #fff;
+            border: 3px solid #dee2e6;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .milestone.left::before {
+            right: -18px;
+        }
+        .milestone.right::before {
+            left: -18px;
+        }
+        .in-progress::before {
+            border-color: #007bff;
+            animation: pulse 1.5s infinite;
+        }
+        .in-progress .fa-spinner {
+            margin-left: 5px;
+            color: #007bff;
+        }
+        .complete::before {
+            border-color: #28a745;
+            background-color: #28a745;
+        }
+        .complete {
+            color: #28a745;
+            font-weight: 500;
+        }
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .review-button {
+            display: block;
+            margin: 20px auto 0;
+            text-align: center;
+        }
+        .review-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .review-section h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group span, .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .form-group input, .form-group textarea {
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: #007bff;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+            .milestone {
+                width: 80%;
+                left: 10% !important;
+                margin-left: 0;
+            }
+            .timeline::before {
+                left: 6px;
+            }
+            .milestone.left::before, .milestone.right::before {
+                left: -6px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .button-group button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>JIRA Task Progress Tracker</h1>
+        </div>
+        <div class="input-group">
+            <input type="text" id="jiraInput" placeholder="Enter JIRA ID">
+            <button onclick="startProcess()">Submit</button>
+        </div>
+        <div id="timeline" class="timeline"></div>
+        <div id="error" class="error" style="display: none;"></div>
+        <button id="reviewButton" class="review-button" onclick="showReviewSection()" style="display: none;">Review Draft</button>
+        <div id="reviewSection" class="review-section" style="display: none;">
+            <h2>Review Draft Change Request</h2>
+            <div class="form-group">
+                <label for="summary">Summary</label>
+                <span id="summaryText">Sample Summary from JIRA and Confluence</span>
+                <input type="text" id="summaryInput" style="display: none;" value="Sample Summary from JIRA and Confluence">
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <span id="descriptionText">Detailed description fetched and formatted by LLM.</span>
+                <textarea id="descriptionInput" style="display: none;">Detailed description fetched and formatted by LLM.</textarea>
+            </div>
+            <div class="button-group">
+                <button id="finalSubmitButton" onclick="finalSubmit()">Final Submission</button>
+                <button id="editButton" onclick="enableEdit()">Edit</button>
+                <button id="cancelButton" onclick="disableEdit()" style="display: none;">Cancel</button>
+            </div>
+        </div>
+        <div id="finalSuccess" class="success-message" style="display: none;">Change Request submitted successfully!</div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+        const milestones = ["Fetching JIRA info", "Fetching Confluence info", "Formatting Data", "Calling LLM", "Draft Change Request created successfully"];
+        const delays = [2000, 2000, 3000, 4000, 1000];
+
+        function startProcess() {
+            if (isProcessing) return;
+            const jiraInput = document.getElementById('jiraInput').value.trim();
+            const errorDiv = document.getElementById('error');
+            if (!jiraInput) {
+                errorDiv.textContent = "Please enter a JIRA ID.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+            errorDiv.style.display = 'none';
+            isProcessing = true;
+            document.querySelector('button[onclick="startProcess()"]').disabled = true;
+            createTimeline();
+        }
+
+        function createTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+            milestones.forEach((milestone, index) => {
+                const div = document.createElement('div');
+                div.className = index % 2 === 0 ? 'milestone left' : 'milestone right';
+                div.textContent = milestone;
+                timeline.appendChild(div);
+            });
+            processMilestones(0);
+        }
+
+        function processMilestones(index) {
+            if (index >= milestones.length) {
+                document.getElementById('reviewButton').style.display = 'block';
+                isProcessing = false;
+                document.querySelector('button[onclick="startProcess()"]').disabled = false;
+                return;
+            }
+            const milestonesElements = document.querySelectorAll('.milestone');
+            if (index < milestonesElements.length) {
+                milestonesElements[index].classList.add('in-progress');
+                milestonesElements[index].innerHTML += ' <i class="fas fa-spinner fa-spin"></i>';
+                setTimeout(() => {
+                    milestonesElements[index].classList.remove('in-progress');
+                    milestonesElements[index].classList.add('complete');
+                    milestonesElements[index].innerHTML = milestones[index] + ' <i class="fas fa-check"></i>';
+                    processMilestones(index + 1);
+                }, delays[index]);
+            }
+        }
+
+        function showReviewSection() {
+            document.getElementById('reviewSection').style.display = 'block';
+        }
+
+        function enableEdit() {
+            document.getElementById('summaryText').style.display = 'none';
+            document.getElementById('summaryInput').style.display = 'block';
+            document.getElementById('descriptionText').style.display = 'none';
+            document.getElementById('descriptionInput').style.display = 'block';
+            document.getElementById('editButton').style.display = 'none';
+            document.getElementById('finalSubmitButton').style.display = 'none'; // Hide during edit
+            document.getElementById('cancelButton').style.display = 'inline-block';
+        }
+
+        function disableEdit() {
+            document.getElementById('summaryText').style.display = 'block';
+            document.getElementById('summaryInput').style.display = 'none';
+            document.getElementById('descriptionText').style.display = 'block';
+            document.getElementById('descriptionInput').style.display = 'none';
+            document.getElementById('editButton').style.display = 'inline-block';
+            document.getElementById('finalSubmitButton').style.display = 'inline-block'; // Restore on cancel
+            document.getElementById('cancelButton').style.display = 'none';
+            // Reset to original values if needed
+            document.getElementById('summaryInput').value = 'Sample Summary from JIRA and Confluence';
+            document.getElementById('descriptionInput').value = 'Detailed description fetched and formatted by LLM.';
+        }
+
+        function finalSubmit() {
+            // Simulate submission
+            document.getElementById('reviewSection').style.display = 'none';
+            document.getElementById('finalSuccess').style.display = 'block';
+            // Optionally, update the text with edited values
+            document.getElementById('summaryText').textContent = document.getElementById('summaryInput').value || document.getElementById('summaryText').textContent;
+            document.getElementById('descriptionText').textContent = document.getElementById('descriptionInput').value || document.getElementById('descriptionText').textContent;
+        }
+    </script>
+</body>
+</html>
